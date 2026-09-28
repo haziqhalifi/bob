@@ -29,7 +29,6 @@ export default function GanttView({ items }: Props) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Only items with parseable deadlines
   const datable = items
     .map((item) => ({ item, deadline: parseDeadlineDate(item.result.deadline) }))
     .filter((x): x is { item: SavedItem; deadline: Date } => x.deadline !== null)
@@ -44,20 +43,28 @@ export default function GanttView({ items }: Props) {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <p className="text-4xl mb-3">📊</p>
-        <p className="text-sm font-medium text-gray-500">No saved items yet</p>
-        <p className="text-xs mt-1">Analyse a message and save it to see the Gantt timeline</p>
+      <div className="text-center py-16 text-slate-400">
+        <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </div>
+        <p className="text-sm font-semibold text-slate-500">No saved items yet</p>
+        <p className="text-xs mt-1 text-slate-400">Analyse a message and save it to see the Gantt timeline</p>
       </div>
     );
   }
 
   if (datable.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <p className="text-4xl mb-3">📊</p>
-        <p className="text-sm font-medium text-gray-500">No deadline dates found</p>
-        <p className="text-xs mt-1">Items need a parseable date deadline to appear on the Gantt chart</p>
+      <div className="text-center py-16 text-slate-400">
+        <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </div>
+        <p className="text-sm font-semibold text-slate-500">No deadline dates found</p>
+        <p className="text-xs mt-1 text-slate-400">Items need a parseable date deadline to appear on the timeline</p>
       </div>
     );
   }
@@ -75,7 +82,7 @@ export default function GanttView({ items }: Props) {
     return (ms / totalMs) * 100;
   }
 
-  // Build tick marks (weekly)
+  // Weekly tick marks
   const ticks: Date[] = [];
   const tick = new Date(today);
   tick.setDate(tick.getDate() + 7);
@@ -85,24 +92,28 @@ export default function GanttView({ items }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between text-xs text-gray-400">
-        <span className="font-semibold text-gray-500">Today — {formatShortDate(today)}</span>
+    <div className="space-y-5">
+      {/* Window header */}
+      <div className="flex items-center justify-between text-xs text-slate-400">
+        <span className="font-semibold text-slate-500 flex items-center gap-1.5">
+          <span className="w-0.5 h-3.5 bg-blue-500 rounded-full" aria-hidden="true" />
+          Today — {formatShortDate(today)}
+        </span>
         <span>{formatShortDate(windowEnd)}</span>
       </div>
 
       {/* Timeline ruler */}
-      <div className="relative h-4 border-b border-gray-200">
-        {/* Today marker */}
-        <div className="absolute left-0 top-0 bottom-0 w-px bg-blue-400" />
+      <div className="relative h-5 border-b border-slate-200">
+        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500 rounded-full" aria-hidden="true" />
         {ticks.map((t, i) => (
           <div
             key={i}
             className="absolute top-0 bottom-0 flex flex-col items-center"
             style={{ left: `${pct(t)}%` }}
+            aria-hidden="true"
           >
-            <div className="w-px h-2 bg-gray-200" />
-            <span className="text-[9px] text-gray-300 whitespace-nowrap mt-0.5">
+            <div className="w-px h-2 bg-slate-200" />
+            <span className="text-[9px] text-slate-300 whitespace-nowrap mt-0.5 font-medium">
               {formatShortDate(t)}
             </span>
           </div>
@@ -110,7 +121,7 @@ export default function GanttView({ items }: Props) {
       </div>
 
       {/* Rows */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {datable.map(({ item, deadline }) => {
           const endPct = pct(deadline);
           const now = new Date();
@@ -118,18 +129,22 @@ export default function GanttView({ items }: Props) {
           const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / 86400000);
           const isOverdue = diffDays < 0;
           const isUrgent = diffDays >= 0 && diffDays <= 3;
-          const barColor = isOverdue ? "bg-gray-400" : PRIORITY_BAR[item.result.priority];
+          const barColor = isOverdue ? "bg-slate-300" : PRIORITY_BAR[item.result.priority];
 
           return (
-            <div key={item.id} className="group">
-              {/* Label */}
-              <div className="flex items-center justify-between mb-1 gap-2">
-                <p className="text-xs font-medium text-gray-700 truncate flex-1 min-w-0">
+            <div key={item.id}>
+              {/* Label row */}
+              <div className="flex items-center justify-between mb-1.5 gap-2">
+                <p className="text-xs font-medium text-slate-700 truncate flex-1 min-w-0 leading-snug">
                   {item.result.primaryAction ?? item.result.summary}
                 </p>
                 <span
-                  className={`shrink-0 text-xs font-semibold ${
-                    isOverdue ? "text-gray-400" : isUrgent ? "text-red-600" : PRIORITY_LABEL[item.result.priority]
+                  className={`shrink-0 text-xs font-semibold tabular-nums ${
+                    isOverdue
+                      ? "text-slate-400"
+                      : isUrgent
+                      ? "text-red-600"
+                      : PRIORITY_LABEL[item.result.priority]
                   }`}
                 >
                   {isOverdue
@@ -143,26 +158,33 @@ export default function GanttView({ items }: Props) {
               </div>
 
               {/* Bar track */}
-              <div className="relative h-5 bg-gray-100 rounded-full overflow-hidden">
-                {/* Bar from 0 → deadline */}
+              <div
+                className="relative h-5 bg-slate-100 rounded-full overflow-hidden"
+                role="meter"
+                aria-label={`${item.result.primaryAction ?? item.result.summary}: ${Math.round(endPct)}% of timeline`}
+                aria-valuenow={Math.round(endPct)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                {/* Progress bar */}
                 <div
-                  className={`absolute left-0 top-0 bottom-0 rounded-full transition-all ${barColor} opacity-80`}
-                  style={{ width: `${Math.max(endPct, 1)}%` }}
+                  className={`absolute left-0 top-0 bottom-0 rounded-full transition-all ${barColor} opacity-85`}
+                  style={{ width: `${Math.max(endPct, 1.5)}%` }}
                 />
                 {/* Today line */}
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500 z-10" />
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500 z-10" aria-hidden="true" />
                 {/* Deadline marker */}
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-gray-500 opacity-40 z-10"
+                  className="absolute top-0 bottom-0 w-0.5 bg-slate-500 opacity-30 z-10"
                   style={{ left: `${endPct}%` }}
+                  aria-hidden="true"
                 />
-                {/* Deadline date label inside bar */}
-                <span
-                  className="absolute right-2 top-0 bottom-0 flex items-center text-[10px] font-medium text-white opacity-90"
-                  style={{ display: endPct > 20 ? "flex" : "none" }}
-                >
-                  {formatShortDate(deadline)}
-                </span>
+                {/* Date label inside bar */}
+                {endPct > 20 && (
+                  <span className="absolute right-2 top-0 bottom-0 flex items-center text-[10px] font-semibold text-white opacity-90">
+                    {formatShortDate(deadline)}
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -171,15 +193,16 @@ export default function GanttView({ items }: Props) {
 
       {/* Items without dates */}
       {undatable.length > 0 && (
-        <div className="pt-4 border-t border-gray-100">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+        <div className="pt-4 border-t border-slate-100">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2.5">
             No date set
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {undatable.map((item) => (
-              <div key={item.id} className="flex items-center gap-2 text-xs text-gray-500">
+              <div key={item.id} className="flex items-center gap-2 text-xs text-slate-500">
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${PRIORITY_BAR[item.result.priority]}`}
+                  aria-hidden="true"
                 />
                 <span className="truncate">
                   {item.result.primaryAction ?? item.result.summary}
@@ -191,11 +214,11 @@ export default function GanttView({ items }: Props) {
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-gray-400 pt-1">
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2 rounded bg-red-500 opacity-80" />High</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2 rounded bg-amber-400 opacity-80" />Medium</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2 rounded bg-green-500 opacity-80" />Low</span>
-        <span className="flex items-center gap-1"><span className="w-0.5 h-3 bg-blue-500" />Today</span>
+      <div className="flex items-center gap-4 text-xs text-slate-400 pt-1" aria-label="Priority legend">
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2 rounded bg-red-500 opacity-85" aria-hidden="true" />High</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2 rounded bg-amber-400 opacity-85" aria-hidden="true" />Medium</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2 rounded bg-green-500 opacity-85" aria-hidden="true" />Low</span>
+        <span className="flex items-center gap-1.5"><span className="w-0.5 h-3 bg-blue-500 rounded-full" aria-hidden="true" />Today</span>
       </div>
     </div>
   );
